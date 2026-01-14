@@ -1,0 +1,143 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "library-api-dashboard",
+    "title": "Library API Monitoring",
+    "tags": ["library", "api", "nodejs"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 0,
+    "refresh": "5s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Rate",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_ms_count[1m])",
+            "legendFormat": "{{method}} {{route}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "yaxes": [
+          {
+            "label": "requests/sec",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Response Time (p95)",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_ms_bucket[5m]))",
+            "legendFormat": "p95 - {{method}} {{route}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "yaxes": [
+          {
+            "label": "milliseconds",
+            "format": "ms"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "HTTP Status Codes",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(http_request_duration_ms_count{code=~\"2..\"}[1m])",
+            "legendFormat": "2xx Success",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(http_request_duration_ms_count{code=~\"4..\"}[1m])",
+            "legendFormat": "4xx Client Error",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(http_request_duration_ms_count{code=~\"5..\"}[1m])",
+            "legendFormat": "5xx Server Error",
+            "refId": "C"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Memory Usage",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes / 1024 / 1024",
+            "legendFormat": "Memory (MB)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        },
+        "yaxes": [
+          {
+            "label": "MB",
+            "format": "short"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "CPU Usage",
+        "type": "graph",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+            "legendFormat": "CPU %",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        },
+        "yaxes": [
+          {
+            "label": "percent",
+            "format": "percent"
+          }
+        ]
+      }
+    ]
+  }
+}

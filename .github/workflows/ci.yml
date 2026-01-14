@@ -25,9 +25,24 @@ jobs:
       - name: Run Tests
         run: npm test
 
-      - name: Security Audit (SAST)
-        run: npm audit --audit-level=high
+      # - name: Security Audit (SAST)
+      #   run: npm audit --audit-level=high
+  security-sast:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
 
+      - name: Run npm audit
+        run: |
+          npm audit --json > audit-report.json || true
+          npm audit --audit-level=high
+
+      - name: Upload audit report
+        uses: actions/upload-artifact@v3
+        with:
+          name: npm-audit-report
+          path: audit-report.json
   docker-build:
     needs: build-and-test
     runs-on: ubuntu-latest

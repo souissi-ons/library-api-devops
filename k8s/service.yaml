@@ -5,12 +5,13 @@ metadata:
   labels:
     app: library-api
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: library-api
   ports:
     - protocol: TCP
       port: 80
       targetPort: 3000
+      nodePort: 30080
       name: http
   sessionAffinity: None

@@ -95,3 +95,21 @@ jobs:
 
       - name: Stop Docker Container
         run: docker stop library-app
+  
+  deploy-test:
+    needs: [docker-build, dast-scan]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create KinD Cluster
+        uses: helm/kind-action@v1.10.0 # Crée un cluster Kubernetes (KinD) en 1 min
+
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f k8s/service.yaml
+          kubectl wait --for=condition=available --timeout=120s deployment/library-api
+          kubectl get pods
+          kubectl get services

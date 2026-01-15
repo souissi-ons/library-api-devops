@@ -98,8 +98,7 @@ jobs:
   
   deploy-k8s:
     needs: [docker-build, dast-scan] 
-    runs-on: ubuntu-latest
-    continue-on-error: true
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

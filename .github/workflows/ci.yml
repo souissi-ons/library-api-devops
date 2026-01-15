@@ -8,8 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-    
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -95,3 +94,27 @@ jobs:
 
       - name: Stop Docker Container
         run: docker stop library-app
+  
+  deploy-k8s:
+    needs: [docker-build, dast-scan] 
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Kubernetes Set Context
+        uses: azure/k8s-set-context@v3
+        with:
+          method: kubeconfig
+          kubeconfig: ${{ secrets.KUBE_CONFIG }} 
+
+      - name: Deploy to Kubernetes
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: |
+            k8s/deployment.yaml
+            k8s/service.yaml
+          images: |
+            ${{ secrets.DOCKER_USERNAME }}/library-api:latest
+          strategy: canary

@@ -2,18 +2,9 @@
 
 A production-ready REST API for library management, demonstrating modern DevOps practices including CI/CD, containerization, Kubernetes deployment, and comprehensive observability.
 
-## Features
+## 📋 Table of Contents
 
-- **REST API:** Complete CRUD operations for book management
-- **Observability:** Prometheus metrics + Winston structured logging
-- **Security:** SAST (npm audit) + DAST (OWASP ZAP) scanning
-- **Containerization:** Docker with multi-stage builds
-- **CI/CD:** Automated GitHub Actions pipeline
-- **Kubernetes:** Production-ready deployment manifests
-- **Testing:** 100% test coverage with Jest
-
-## Table of Contents
-
+- [Features](#features)
 - [API Documentation](#api-documentation)
 - [Getting Started](#getting-started)
 - [Docker Usage](#docker-usage)
@@ -21,20 +12,39 @@ A production-ready REST API for library management, demonstrating modern DevOps 
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Observability](#observability)
 - [Security](#security)
+- [Architecture](#architecture)
+- [Testing](#testing)
 
-## API Documentation
+## ✨ Features
+
+- **REST API:** Complete CRUD operations for book management
+- **Observability:** Prometheus metrics + Winston structured logging
+- **Security:** SAST (npm audit) + DAST (OWASP ZAP) scanning
+- **Containerization:** Docker with optimized builds
+- **CI/CD:** Automated GitHub Actions pipeline
+- **Kubernetes:** Production-ready deployment manifests
+- **Testing:** 100% test coverage with Jest
+
+## 📖 API Documentation
+
+### Base URL
+```
+http://localhost:3000
+```
 
 ### Endpoints
 
 | Method | Endpoint | Description | Request Body | Response |
 |--------|----------|-------------|--------------|----------|
 | GET | `/health` | Health check | - | `{"status": "UP"}` |
+| GET | `/` | Root endpoint | - | `{"message": "Library API is running"}` |
 | GET | `/books` | Get all books | - | Array of books |
 | GET | `/books/:id` | Get specific book | - | Book object or 404 |
 | POST | `/books` | Create new book | `{"title": "...", "author": "..."}` | Created book (201) |
 | GET | `/metrics` | Prometheus metrics | - | Metrics in Prometheus format |
 
 ### Example Requests
+
 ```bash
 # Health check
 curl http://localhost:3000/health
@@ -54,7 +64,7 @@ curl -X POST http://localhost:3000/books \
 curl http://localhost:3000/metrics
 ```
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
@@ -88,7 +98,7 @@ npm test
 
 Application will be available at `http://localhost:3000`
 
-## Docker Usage
+## 🐳 Docker Usage
 
 ### Build Image
 ```bash
@@ -114,15 +124,17 @@ docker-compose down
 docker pull onssouissi/library-api:latest
 ```
 
-## Kubernetes Deployment
+## ☸️ Kubernetes Deployment
 
 ### Local Deployment (Minikube)
+
 ```bash
 # Start minikube
 minikube start
 
 # Deploy application
-kubectl apply -f k8s/
+kubectl apply -f k8s/deployment.yaml
+kubectl apply -f k8s/service.yaml
 
 # Get service URL
 minikube service library-api-service --url
@@ -131,14 +143,27 @@ minikube service library-api-service --url
 curl $(minikube service library-api-service --url)/health
 ```
 
-### Verify Deployment
+### Using Deployment Script
+
 ```bash
+chmod +x scripts/deploy-minikube.sh
+./scripts/deploy-minikube.sh
+```
+
+### Verify Deployment
+
+```bash
+# Check pods
 kubectl get pods -l app=library-api
+
+# Check service
 kubectl get svc library-api-service
+
+# View logs
 kubectl logs -l app=library-api -f
 ```
 
-## CI/CD Pipeline
+## 🔄 CI/CD Pipeline
 
 ### GitHub Actions Workflow
 
@@ -149,46 +174,58 @@ The pipeline runs automatically on:
 ### Pipeline Stages
 
 1. **Build & Test**
-   - Install dependencies
-   - Run Jest tests
-   - Check test coverage
+   - Install dependencies with `npm ci`
+   - Run Jest tests with coverage
+   - Verify 100% test coverage
 
 2. **Security Scan (SAST)**
-   - npm audit for vulnerabilities
+   - Run `npm audit` for vulnerabilities
+   - Generate audit report
    - Fail on high/critical issues
 
 3. **Docker Build**
-   - Build Docker image
+   - Build optimized Docker image
    - Push to Docker Hub
    - Tag as `latest`
 
 4. **Security Scan (DAST)**
    - Deploy container locally
-   - Run OWASP ZAP scans
+   - Run OWASP ZAP Baseline Scan
+   - Run OWASP ZAP Full Scan
    - Generate security reports
+
+5. **Deploy Test**
+   - Create KinD (Kubernetes in Docker) cluster
+   - Deploy to test environment
+   - Verify deployment health
 
 ### View Pipeline
 
 Check the [Actions tab](https://github.com/souissi-ons/library-api-devops/actions) for pipeline status.
 
-## Observability
+## 📊 Observability
 
 ### Metrics
 
 Prometheus metrics exposed at `/metrics`:
+
 ```bash
 curl http://localhost:3000/metrics
 ```
 
-**Key Metrics:**
-- `http_request_duration_ms` - Request duration histogram
+**Available Metrics:**
+- `http_request_duration_ms` - HTTP request duration histogram
+  - Labels: `method`, `route`, `code`
+  - Buckets: 50, 100, 200, 300, 400, 500, 1000ms
 - `process_cpu_seconds_total` - CPU usage
 - `process_resident_memory_bytes` - Memory usage
 - `nodejs_version_info` - Node.js version
+- `nodejs_heap_size_total_bytes` - Heap size
 
 ### Logs
 
 Structured JSON logs with Winston:
+
 ```json
 {
   "level": "info",
@@ -196,11 +233,18 @@ Structured JSON logs with Winston:
   "method": "GET",
   "url": "/books",
   "status": 200,
-  "duration": "15ms"
+  "duration": "15ms",
+  "timestamp": "2026-01-15T10:30:45.123Z"
 }
 ```
 
-View logs:
+**Log Levels:**
+- `info` - General operations
+- `warn` - Warning conditions
+- `error` - Error conditions
+
+**View Logs:**
+
 ```bash
 # Local
 npm start
@@ -211,77 +255,111 @@ docker logs library-api
 # Kubernetes
 kubectl logs -l app=library-api -f
 ```
+## 🔒 Security
 
-## Security
-
-### SAST (Static Analysis)
+### SAST (Static Application Security Testing)
 
 - **Tool:** npm audit
 - **Runs:** Every CI/CD execution
 - **Threshold:** Fails on high/critical vulnerabilities
+
 ```bash
+# Run locally
 npm audit
+
+# Generate report
+npm audit --json > audit-report.json
 ```
 
-### DAST (Dynamic Analysis)
+### DAST (Dynamic Application Security Testing)
 
 - **Tool:** OWASP ZAP
-- **Scans:** Baseline + Full scan
+- **Scans:** 
+  - Baseline Scan: Quick passive scan
+  - Full Scan: Comprehensive active scan
 - **Runs:** After Docker build in CI/CD
 
-### Security Best Practices
+**Security Reports:**
+- Available as GitHub Actions artifacts
+- Check the Actions tab after pipeline completion
+
+### Security Best Practices Implemented
 
 ✅ Non-root user in Docker container  
-✅ Minimal Alpine base image  
+✅ Minimal Alpine base image (node:18-alpine)  
 ✅ No hardcoded secrets  
-✅ Regular dependency updates  
-✅ Input validation  
+✅ Production-only dependencies in container  
+✅ Input validation on API endpoints  
 ✅ Health check endpoints  
+✅ Resource limits in Kubernetes  
 
-## Architecture
+## 🏗️ Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    GitHub Actions CI/CD                  │
-│  Build → Test → Security Scan → Docker → Deploy         │
+│              GitHub Actions CI/CD Pipeline               │
+│  Build → Test → Security (SAST) → Docker → DAST         │
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
 │                     Docker Hub                           │
-│              library-api:latest image                    │
+│            onssouissi/library-api:latest                 │
 └─────────────────────────────────────────────────────────┘
                             ↓
 ┌─────────────────────────────────────────────────────────┐
-│                  Kubernetes Cluster                      │
+│              Kubernetes Cluster (Minikube)               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
 │  │   Pod 1      │  │   Pod 2      │  │   Pod 3      │  │
 │  │ library-api  │  │ library-api  │  │ library-api  │  │
 │  └──────────────┘  └──────────────┘  └──────────────┘  │
 │              ↑                                           │
 │    ┌─────────────────┐                                  │
-│    │  LoadBalancer   │                                  │
+│    │  NodePort :30080│                                  │
 │    └─────────────────┘                                  │
 └─────────────────────────────────────────────────────────┘
-                            ↓
+                            ↑
                     External Traffic
 ```
 
-## Testing
+## 🧪 Testing
 
 ### Run Tests
+
 ```bash
+# Run all tests
 npm test
+
+# Run with coverage
+npm test -- --coverage
+
+# Watch mode
+npm test -- --watch
 ```
 
 ### Test Coverage
-```bash
-npm test -- --coverage
-```
 
 Current coverage: **100%**
 
-## Acknowledgments
 
-- DevOps Handbook by Gene Kim
-- OWASP Security Guidelines
-- Kubernetes Documentation
-- GitHub Actions Community
+## 📁 Project Structure
+
+```
+library-api-devops/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # CI/CD pipeline
+├── k8s/
+│   ├── deployment.yaml         # Kubernetes deployment
+│   └── service.yaml            # Kubernetes service
+├── scripts/
+│   └── deploy-minikube.sh      # Deployment script
+├── .dockerignore
+├── .gitignore
+├── docker-compose.yml
+├── Dockerfile
+├── package.json
+├── plugins.js                  # Observability plugins
+├── server.js                   # Main application
+├── server.test.js              # Test suite
+└── README.md
+```
